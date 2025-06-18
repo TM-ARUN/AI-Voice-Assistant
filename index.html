@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Voice Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        overflow-x: hidden;
+    }
+
+    .container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        animation: slideUp 0.8s ease-out;
+    }
+
+    .container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+        background-size: 200% 100%;
+        animation: gradientShift 3s ease-in-out infinite;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+        color: #64748b;
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-bottom: 40px;
+        line-height: 1.5;
+    }
+
+    .mic-wrapper {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 30px;
+    }
+
+    .mic-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        font-size: 1.8rem;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .mic-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        transform: translate(-50%, -50%);
+    }
+
+    .mic-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    }
+
+    .mic-btn:hover::before {
+        width: 100%;
+        height: 100%;
+    }
+
+    .mic-btn:active {
+        transform: translateY(-1px) scale(0.98);
+    }
+
+    .mic-btn.listening {
+        animation: pulse 1.5s infinite;
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 10px 25px rgba(240, 147, 251, 0.3);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(240, 147, 251, 0.5);
+        }
+    }
+
+    .pulse-ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 120px;
+        height: 120px;
+        border: 2px solid rgba(102, 126, 234, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        animation: pulseRing 2s infinite;
+        opacity: 0;
+    }
+
+    @keyframes pulseRing {
+        0% {
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 1;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1.4);
+            opacity: 0;
+        }
+    }
+
+    #response-text {
+        min-height: 60px;
+        padding: 20px;
+        font-size: 1.1rem;
+        color: #334155;
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 16px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        line-height: 1.6;
+        transition: all 0.3s ease;
+    }
+
+    #response-text.active {
+        background: rgba(102, 126, 234, 0.1);
+        border-color: rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+    }
+
+    #conversation-history {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: 20px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+    }
+
+    #conversation-history::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #conversation-history::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #conversation-history::-webkit-scrollbar-thumb {
+        background: rgba(102, 126, 234, 0.3);
+        border-radius: 3px;
+    }
+
+    .history-entry {
+        margin-bottom: 20px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 16px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .history-entry:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .user-input {
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        text-align: left;
+    }
+
+    .ai-response {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        text-align: left;
+    }
+
+    .status-indicator {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #10b981;
+        animation: statusPulse 2s infinite;
+    }
+
+    @keyframes statusPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .wave-animation {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .wave-animation.active {
+        opacity: 1;
+        animation: wave 2s ease-in-out infinite;
+    }
+
+    @keyframes wave {
+        0%, 100% { transform: translateX(-100%); }
+        50% { transform: translateX(100%); }
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            padding: 30px 20px;
+            margin: 10px;
+        }
+
+        h1 {
+            font-size: 2rem;
+        }
+
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 1.5rem;
+        }
+    }
+</style>
+<body>
+    <div class="container">
+        <div class="status-indicator"></div>
+        <h1>AI Voice Assistant</h1>
+        <p class="subtitle">Speak naturally and let AI understand you</p>
+
+        <div class="mic-wrapper">
+            <div class="pulse-ring"></div>
+            <button id="start-record-btn" class="mic-btn">🎤</button>
+        </div>
+
+        <div id="response-text">Click the microphone and start speaking...</div>
+
+        <div id="conversation-history">
+            <!-- Conversation history will be dynamically updated here -->
+        </div>
+
+        <div class="wave-animation"></div>
+    </div>
+
+<script>
+    const startRecordBtn = document.getElementById('start-record-btn');
+    const responseText = document.getElementById('response-text');
+    const conversationHistory = document.getElementById('conversation-history');
+    const waveAnimation = document.querySelector('.wave-animation');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.onstart = function() {
+        responseText.innerHTML = '🎧 Listening... Speak now!';
+        responseText.classList.add('active');
+        startRecordBtn.classList.add('listening');
+        waveAnimation.classList.add('active');
+    };
+
+    recognition.onspeechend = function() {
+        recognition.stop();
+        responseText.classList.remove('active');
+        startRecordBtn.classList.remove('listening');
+        waveAnimation.classList.remove('active');
+    };
+
+    recognition.onresult = function(event) {
+        const userInput = event.results[0][0].transcript;
+        responseText.innerHTML = `💭 You said: "${userInput}"`;
+
+        // Send user input to Flask server
+        fetch('/process_voice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_input: userInput }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            const aiResponse = data.response;
+            responseText.innerHTML = `🤖 AI Response: "${aiResponse}"`;
+
+            // Update conversation history with both user input and AI response
+            updateConversationHistory(data.conversation_history);
+
+            speakResponse(aiResponse);
+        })
+        .catch(error => {
+            responseText.innerHTML = '❌ Error processing request. Please try again.';
+            console.error('Error:', error);
+        });
+    };
+
+    recognition.onerror = function(event) {
+        responseText.innerHTML = '❌ Speech recognition error. Please try again.';
+        startRecordBtn.classList.remove('listening');
+        waveAnimation.classList.remove('active');
+        console.error('Speech recognition error:', event.error);
+    };
+
+    startRecordBtn.addEventListener('click', () => {
+        try {
+            recognition.start();
+        } catch (error) {
+            responseText.innerHTML = '❌ Speech recognition not supported in this browser.';
+            console.error('Recognition error:', error);
+        }
+    });
+
+    // Update the conversation history section
+    function updateConversationHistory(history) {
+        conversationHistory.innerHTML = '';  // Clear existing history
+
+        history.forEach((entry, index) => {
+            const historyEntry = document.createElement('div');
+            historyEntry.classList.add('history-entry');
+            historyEntry.style.animationDelay = `${index * 0.1}s`;
+
+            const userInput = document.createElement('div');
+            userInput.classList.add('user-input');
+            userInput.innerHTML = `👤 You: ${entry.user}`;
+
+            const aiResponse = document.createElement('div');
+            aiResponse.classList.add('ai-response');
+            aiResponse.innerHTML = `🤖 AI: ${entry.ai}`;
+
+            historyEntry.appendChild(userInput);
+            historyEntry.appendChild(aiResponse);
+
+            conversationHistory.appendChild(historyEntry);
+        });
+
+        // Scroll to bottom of conversation history
+        conversationHistory.scrollTop = conversationHistory.scrollHeight;
+    }
+
+    // Use the SpeechSynthesis API to speak the AI response
+    function speakResponse(text) {
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 0.8;
+        synth.speak(utterance);
+    }
+
+    // Add some interactive feedback
+    startRecordBtn.addEventListener('mousedown', () => {
+        startRecordBtn.style.transform = 'translateY(-1px) scale(0.95)';
+    });
+
+    startRecordBtn.addEventListener('mouseup', () => {
+        startRecordBtn.style.transform = '';
+    });
+</script>
+</body>
+</html>

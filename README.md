@@ -5,11 +5,16 @@ A modern, interactive voice assistant built with Flask and Google's Gemini AI. F
  **Features**
 **Modern UI/UX**
 
-***Glassmorphism design** with animated gradients and backdrop blur effects
-***Responsive layout** that works seamlessly on desktop and mobile
-***Smooth animations** including pulse effects, hover transitions, and wave animations
-***Real-time visual feedback** during speech recognition and processing
-***Custom icons and emojis** for enhanced user experience
+***Glassmorphism design** 
+with animated gradients and backdrop blur effects
+***Responsive layout** 
+that works seamlessly on desktop and mobile
+***Smooth animations** 
+including pulse effects, hover transitions, and wave animations
+***Real-time visual feedback** 
+during speech recognition and processing
+***Custom icons and emojis** 
+for enhanced user experience
 
 **Advanced AI Capabilities**
 
